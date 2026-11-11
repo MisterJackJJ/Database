@@ -122,7 +122,12 @@ public class Textdatei implements DatenbankInterface {
             if (Files.notExists(datei)) {
                 return new ArrayList<>();
             }
-            return new ArrayList<>(Files.readAllLines(datei, StandardCharsets.UTF_8));
+            // Kommentar-/Kopfzeilen (# ...) herausfiltern, damit sie sich
+            // beim erneuten Schreiben nicht vervielfachen
+            return new ArrayList<>(Files.readAllLines(datei, StandardCharsets.UTF_8)
+                    .stream()
+                    .filter(z -> !z.isBlank() && !z.startsWith("#"))
+                    .toList());
         } catch (IOException e) {
             throw new RuntimeException("Datei konnte nicht gelesen werden: " + datei, e);
         }
