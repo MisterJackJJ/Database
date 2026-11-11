@@ -1,0 +1,124 @@
+package DATABASE;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class Sqlite implements DatenbankInterface {
+
+    @Override
+    public void initialisieren() {
+        String sql = """
+            CREATE TABLE IF NOT EXISTS bestenliste (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                datum TEXT,
+                name TEXT NOT NULL,
+                punkte INTEGER NOT NULL
+            )""";
+        try (Connection con = DatenbankVerbindung.getConnection();
+             Statement st = con.createStatement()) {
+            st.execute(sql);
+        } catch (SQLException e) {
+            throw new RuntimeException("Datei konnte nicht angelegt werden", e);
+        }
+    }
+
+    @Override
+    public void speichern(DatenbankObjekt c) {
+        if (c.getId() == 0) {
+            insert(c);      // neu → Einfügen
+        } else {
+            update(c);     // existiert → Aktualisieren
+        }
+    }
+
+    private void insert(DatenbankObjekt c) {
+        String sql = "INSERT INTO bestenliste (datum, name, punkte) VALUES (?, ?, ?)";
+        try (Connection con = DatenbankVerbindung.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql,
+                     Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(2, c.getName());     // ?-Platzhalter füllen
+            ps.setInt(3, c.getPunkte());
+            ps.setString(1, c.getDatum());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    // SQLite hat die neue ID vergeben → zurück ins Objekt schreiben
+                    c = setzeId(c, keys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Einfügen fehlgeschlagen", e);
+        }
+    }
+    private void update(DatenbankObjekt c) {
+        String sql = "UPDATE bestenliste SET name = ?, email = ? WHERE id = ?";
+        try (Connection con = DatenbankVerbindung.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, c.getName());
+            ps.setInt(2, c.getPunkte());
+            ps.setInt(3, c.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Aktualisieren fehlgeschlagen", e);
+        }
+    }
+
+    @Override
+    public Optional<DatenbankObjekt> findById(int id) {
+        String sql = "SELECT id, name, punkte FROM bestenliste WHERE id = ?";
+        try (Connection con = DatenbankVerbindung.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Suche fehlgeschlagen", e);
+        }
+    }
+
+    @Override
+    public List<DatenbankObjekt> findAll() {
+        String sql = "SELECT id, name, punkte FROM bestenliste";
+        List<DatenbankObjekt> result = new ArrayList<>();
+        try (Connection con = DatenbankVerbindung.getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException("Abfrage fehlgeschlagen", e);
+        }
+    }
+
+    @Override
+    public void loeschen(int id) {
+        String sql = "DELETE FROM bestenliste WHERE id = ?";
+        try (Connection con = DatenbankVerbindung.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Löschen fehlgeschlagen", e);
+        }
+    }
+
+    /** Übersetzt eine Ergebniszeile (ResultSet) in ein Zeile-Objekt. */
+    private DatenbankObjekt mapRow(ResultSet rs) throws SQLException {
+        return new DatenbankObjekt(
+                rs.getInt("id"),
+                rs.getString("datum"),
+                rs.getString("name"),
+                rs.getInt("punkte"));
+    }
+
+
+    private DatenbankObjekt setzeId(DatenbankObjekt c, int id) {
+        return new DatenbankObjekt(id, c.getDatum(), c.getName(), c.getPunkte());
+    }
+
+}
