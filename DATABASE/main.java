@@ -7,18 +7,22 @@ public class main {
 
     public static void main(String[] args) {
         // Interface-Typ referenzieren, Implementierung austauschbar
-        DatenbankInterface db = new Sqlite();
+        DatenbankInterface db = new Textdatei();
 
         // 1. Tabelle anlegen
-        db.initialisieren();
-        System.out.println("Datenbank initialisiert.");
+        // db.initialisieren();
+        // System.out.println("Datenbank initialisiert.");
 
         // 2. Neue Einträge speichern (id = 0 → INSERT)
-        DatenbankObjekt eintrag1 = new DatenbankObjekt(0, "2026-11-11", "Alice", 150);
-        DatenbankObjekt eintrag2 = new DatenbankObjekt(0, "2026-11-11", "Bob", 90);
-        db.speichern(eintrag1);
-        db.speichern(eintrag2);
-        System.out.println("Gespeichert: " + eintrag1.getName() + ", " + eintrag2.getName());
+//        DatenbankObjekt eintrag1 = new DatenbankObjekt(0, "2026-11-11", "Dominik", 150);
+//        DatenbankObjekt eintrag2 = new DatenbankObjekt(0, "2026-11-11", "Lino", 90);
+//        DatenbankObjekt eintrag3 = new DatenbankObjekt(0, "2026-11-11", "Alex", 500);
+//        DatenbankObjekt eintrag4 = new DatenbankObjekt(0, "2026-11-11", "Jakob", 10);
+//        db.speichern(eintrag1);
+//        db.speichern(eintrag2);
+//        db.speichern(eintrag3);
+//        db.speichern(eintrag4);
+//        System.out.println("Gespeichert: " + eintrag1.getName() + ", " + eintrag2.getName());
 
         // 3. Alle Einträge anzeigen
         List<DatenbankObjekt> alle = db.findAll();
@@ -43,8 +47,8 @@ public class main {
         }
 
         // 6. Eintrag löschen
-        db.loeschen(2);
-        System.out.println("\nEintrag mit ID 2 gelöscht.");
+        // db.loeschen(2);
+        // System.out.println("\nEintrag mit ID 2 gelöscht.");
 
         // 7. Finaler Stand
         System.out.println("\nBestenliste nach dem Löschen:");
