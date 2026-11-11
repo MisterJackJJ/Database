@@ -1,0 +1,13 @@
+# Zugangsdaten nicht einchecken
+db.properties
+
+# SQLite-Datenbank-Datei
+bestenliste.db
+
+# Textdatei-"Datenbank"
+bestenliste.txt
+
+# IntelliJ
+.idea/
+*.iml
+out/
